@@ -1,5 +1,6 @@
 #step 1:  Access arXiv using URL.
 import requests
+from langchain.tools import tool
 def search_arxiv_papers(topic:str, max_results:int = 5)->dict:
     """
     Function to search arXiv using a query and return the results.
@@ -82,6 +83,12 @@ def arxiv_search(topic: str) -> list[dict]:
     Returns:
         list[dict]: A list of dictionaries containing paper details.
     """
+    print("ARXIV search tool called with topic:", topic)
+    print("Searching arXiv for papers on topic:", topic)
     papers = search_arxiv_papers(topic)
-    return parse_arxiv_xml(papers)
+    if len(papers) == 0:
+        print(f"No papers found for topic: {topic}")
+        raise ValueError(f"No papers found for topic: {topic}")
+    print(f"len(papers) papers found for topic: {topic}")
+    return papers
 
