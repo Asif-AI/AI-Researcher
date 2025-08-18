@@ -32,7 +32,6 @@ def search_arxiv_papers(topic:str, max_results:int = 5)->dict:
     #data = parse_arxiv_xml(response.text)
     return response.text
 
-print(search_arxiv_papers(topic="prompt engineering", max_results=5))
 
 import xml.etree.ElementTree as ET
 def parse_arxiv_xml(xml_data: str) -> dict:
@@ -51,7 +50,7 @@ def parse_arxiv_xml(xml_data: str) -> dict:
     for entry in root.findall('atom:entry', ns):
         #Extract authors
         authors = [
-            authors.find_text('atom:name', namespaces=ns)
+            authors.find_text('atom:name', ns)
             for authors in entry.findall('atom:author', ns)           
         ]
         # Extract categories from term attribute
@@ -59,11 +58,30 @@ def parse_arxiv_xml(xml_data: str) -> dict:
             category.get('term')
             for category in entry.findall('atom:category', ns)
         ]
+        # Extract PDF link (rel="related" and  type ="application/pdf" )
+        pdf_link = None
+        
+        for link in entry.findall('atom:link', ns):
+            if link.get('rel') == 'related' and link.get('type') == 'application/pdf':
+                pdf_link = link.atrrib.get('href')
+                break
+        enteries.append({
+            'title': entry.findtext('atom:title', ns),
+            "summary": entry.findtext('atom:summary', ns),
+            'authors': authors,
+            'categories': categories,
+            'pdf_link': pdf_link
+        })
 
+#convvert the function to a tool
+@tool
+def arxiv_search(topic: str) -> list[dict]:
+    """ Search arXiv for papers on a given topic and return a list of dictionaries with paper details.
+    Args:
+        topic (str): The topic to search for.
+    Returns:
+        list[dict]: A list of dictionaries containing paper details.
+    """
+    papers = search_arxiv_papers(topic)
+    return parse_arxiv_xml(papers)
 
-        title = entry.find('atom:title', ns).text
-        summary = entry.find('atom:summary', ns).text
-        published = entry.find('atom:published', ns).text
-        updated = entry.find('atom:updated', ns).text
-        authors = [author.find('atom:name', ns).text for author in entry.findall('atom:author', ns)]
-        link = entry.find('atom:link[@rel="alternate"]', ns).get('href') 
