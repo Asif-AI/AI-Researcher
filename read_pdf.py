@@ -5,6 +5,7 @@ import requests
 
 #Access PDF from URL
 
+@tool
 def read_pdf(url: str) -> str:
     """function to read a PDF from a URL and return its text content.
     Args:
